@@ -61,8 +61,8 @@ func runNixCommand(args []string, stdout, stderr io.Writer) (err error) {
 	return nil
 }
 
-func Eval(ctx context.Context, flakeUrl, hostname string) (drvPath string, outPath string, machineId string, err error) {
-	drvPath, outPath, err = ShowDerivation(ctx, flakeUrl, hostname)
+func Eval(ctx context.Context, flakeUrl, hostname string, output string) (drvPath string, outPath string, machineId string, err error) {
+	drvPath, outPath, err = ShowDerivation(ctx, flakeUrl, hostname, output)
 	if err != nil {
 		return
 	}
@@ -70,8 +70,8 @@ func Eval(ctx context.Context, flakeUrl, hostname string) (drvPath string, outPa
 	return
 }
 
-func ShowDerivation(ctx context.Context, flakeUrl, hostname string) (drvPath string, outPath string, err error) {
-	installable := fmt.Sprintf("%s#nixosConfigurations.%s.config.system.build.toplevel", flakeUrl, hostname)
+func ShowDerivation(ctx context.Context, flakeUrl, hostname string, output string) (drvPath string, outPath string, err error) {
+	installable := fmt.Sprintf("%s#nixosConfigurations.%s.%s", flakeUrl, hostname, output)
 	args := []string{
 		"show-derivation",
 		installable,
@@ -84,17 +84,17 @@ func ShowDerivation(ctx context.Context, flakeUrl, hostname string) (drvPath str
 		return
 	}
 
-	var output map[string]Derivation
-	err = json.Unmarshal(stdout.Bytes(), &output)
+	var drvOutput map[string]Derivation
+	err = json.Unmarshal(stdout.Bytes(), &drvOutput)
 	if err != nil {
 		return
 	}
 	keys := make([]string, 0, len(output))
-	for key := range output {
+	for key := range drvOutput {
 		keys = append(keys, key)
 	}
 	drvPath = keys[0]
-	outPath = output[drvPath].Outputs.Out.Path
+	outPath = drvOutput[drvPath].Outputs.Out.Path
 	logrus.Infof("nix: the derivation path is %s", drvPath)
 	logrus.Infof("nix: the output path is %s", outPath)
 	return

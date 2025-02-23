@@ -23,7 +23,7 @@ var buildCmd = &cobra.Command{
 		for _, host := range hosts {
 			logrus.Infof("Building the NixOS configuration of machine '%s'", host)
 
-			drvPath, _, err := nix.ShowDerivation(ctx, flakeUrl, host)
+			drvPath, _, err := nix.ShowDerivation(ctx, flakeUrl, host, output)
 			if err != nil {
 				logrus.Errorf("Failed to evaluate the configuration '%s': '%s'", host, err)
 			}
@@ -38,5 +38,6 @@ var buildCmd = &cobra.Command{
 func init() {
 	buildCmd.Flags().StringVarP(&hostname, "hostname", "", "", "the name of the configuration to build")
 	buildCmd.Flags().StringVarP(&flakeUrl, "flake-url", "", ".", "the URL of the flake")
+	buildCmd.Flags().StringVarP(&output, "flake-ref", "", ".", "the ref to build")
 	rootCmd.AddCommand(buildCmd)
 }

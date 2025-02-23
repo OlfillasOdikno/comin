@@ -4,14 +4,16 @@ Copyright © 2022 lewo <lewo@abesis.fr>
 package cmd
 
 import (
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var debug bool
 var hostname string
 var flakeUrl string
+var output string
 
 // Set at build time
 var version = "0.0.0"

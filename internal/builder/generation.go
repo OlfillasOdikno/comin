@@ -60,6 +60,7 @@ type Generation struct {
 	UUID     string `json:"uuid"`
 	FlakeUrl string `json:"flake-url"`
 	Hostname string `json:"hostname"`
+	Output   string `json:"flake-ref"`
 
 	SelectedRemoteUrl       string `json:"remote-url"`
 	SelectedRemoteName      string `json:"remote-name"`

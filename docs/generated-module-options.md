@@ -205,6 +205,27 @@ null or string
 
 
 
+## services\.comin\.output
+
+
+
+The output of the NixOS configuration to evaluate and
+deploy\. This value is used by comin to evaluate the
+flake output
+nixosConfigurations\.“\<hostname>”\.\<output>
+
+
+
+*Type:*
+string
+
+
+
+*Default:*
+` "config.system.build.toplevel" `
+
+
+
 ## services\.comin\.remotes
 
 

@@ -67,7 +67,7 @@ var runCmd = &cobra.Command{
 		sched := scheduler.New()
 		sched.FetchRemotes(fetcher, cfg.Remotes)
 
-		builder := builder.New(gitConfig.Path, gitConfig.Dir, cfg.Hostname, 5*time.Minute, nix.Eval, 30*time.Minute, nix.Build)
+		builder := builder.New(gitConfig.Path, gitConfig.Dir, cfg.Hostname, cfg.Output, 5*time.Minute, nix.Eval, 30*time.Minute, nix.Build)
 		deployer := deployer.New(nix.Deploy, lastDeployment)
 
 		manager := manager.New(store, metrics, sched, fetcher, builder, deployer, machineId)

@@ -11,11 +11,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type EvalFunc func(ctx context.Context, flakeUrl string, hostname string) (drvPath string, outPath string, machineId string, err error)
+type EvalFunc func(ctx context.Context, flakeUrl string, hostname string, output string) (drvPath string, outPath string, machineId string, err error)
 type BuildFunc func(ctx context.Context, drvPath string) error
 
 type Builder struct {
 	hostname       string
+	output         string
 	repositoryPath string
 	repositoryDir  string
 	evalTimeout    time.Duration
@@ -41,13 +42,14 @@ type Builder struct {
 	buildatorWg *sync.WaitGroup
 }
 
-func New(repositoryPath, repositoryDir, hostname string, evalTimeout time.Duration, evalFunc EvalFunc, buildTimeout time.Duration, buildFunc BuildFunc) *Builder {
+func New(repositoryPath, repositoryDir, hostname string, output string, evalTimeout time.Duration, evalFunc EvalFunc, buildTimeout time.Duration, buildFunc BuildFunc) *Builder {
 	logrus.Infof("builder: initialization with repositoryPath=%s, repositoryDir=%s, hostname=%s, evalTimeout=%fs, buildTimeout=%fs, )",
 		repositoryPath, repositoryDir, hostname, evalTimeout.Seconds(), buildTimeout.Seconds())
 	return &Builder{
 		repositoryPath: repositoryPath,
 		repositoryDir:  repositoryDir,
 		hostname:       hostname,
+		output:         output,
 		evalFunc:       evalFunc,
 		evalTimeout:    evalTimeout,
 		buildFunc:      buildFunc,
@@ -100,6 +102,7 @@ func (b *Builder) Stop() {
 type Evaluator struct {
 	flakeUrl string
 	hostname string
+	output   string
 
 	evalFunc EvalFunc
 
@@ -109,7 +112,7 @@ type Evaluator struct {
 }
 
 func (r *Evaluator) Run(ctx context.Context) (err error) {
-	r.drvPath, r.outPath, r.machineId, err = r.evalFunc(ctx, r.flakeUrl, r.hostname)
+	r.drvPath, r.outPath, r.machineId, err = r.evalFunc(ctx, r.flakeUrl, r.hostname, r.output)
 	return err
 }
 
@@ -136,6 +139,7 @@ func (b *Builder) Eval(rs repository.RepositoryStatus) {
 		UUID:                    uuid.NewString(),
 		FlakeUrl:                fmt.Sprintf("git+file://%s?dir=%s&rev=%s", b.repositoryPath, b.repositoryDir, rs.SelectedCommitId),
 		Hostname:                b.hostname,
+		Output:                  b.output,
 		SelectedRemoteName:      rs.SelectedRemoteName,
 		SelectedBranchName:      rs.SelectedBranchName,
 		SelectedCommitId:        rs.SelectedCommitId,
@@ -152,6 +156,7 @@ func (b *Builder) Eval(rs repository.RepositoryStatus) {
 	evaluator := &Evaluator{
 		hostname: g.Hostname,
 		flakeUrl: g.FlakeUrl,
+		output:   g.Output,
 		evalFunc: b.evalFunc,
 	}
 	b.evaluator = NewExec(evaluator, b.evalTimeout)

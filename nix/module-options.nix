@@ -21,6 +21,16 @@
           nixosConfigurations."<hostname>".config.system.build.toplevel
         '';
       };
+      output = mkOption {
+        type = str;
+        default = "config.system.build.toplevel";
+        description = ''
+          The output of the NixOS configuration to evaluate and
+          deploy. This value is used by comin to evaluate the
+          flake output
+          nixosConfigurations."<hostname>".<output>
+        '';
+      };
       flakeSubdirectory = mkOption {
         type = str;
         default = ".";

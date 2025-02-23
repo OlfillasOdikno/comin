@@ -23,7 +23,7 @@ type metricsMock struct{}
 func (m metricsMock) SetDeploymentInfo(commitId, status string) {}
 
 var mkNixEvalMock = func(evalOk chan bool) builder.EvalFunc {
-	return func(ctx context.Context, repositoryPath string, hostname string) (string, string, string, error) {
+	return func(ctx context.Context, repositoryPath string, hostname string, output string) (string, string, string, error) {
 		ok := <-evalOk
 		if ok {
 			return "drv-path", "out-path", "", nil
@@ -62,7 +62,7 @@ func TestBuild(t *testing.T) {
 	r := utils.NewRepositoryMock()
 	f := fetcher.NewFetcher(r)
 	f.Start()
-	b := builder.New("repoPath", "", "my-machine", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
+	b := builder.New("repoPath", "", "my-machine", "config.system.build.toplevel", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
 	var deployFunc = func(context.Context, string, string) (bool, string, error) {
 		return false, "profile-path", nil
 	}
@@ -160,7 +160,7 @@ func TestDeploy(t *testing.T) {
 	r := utils.NewRepositoryMock()
 	f := fetcher.NewFetcher(r)
 	f.Start()
-	b := builder.New("repoPath", "", "my-machine", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
+	b := builder.New("repoPath", "", "my-machine", "config.system.build.toplevel", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
 	var deployFunc = func(context.Context, string, string) (bool, string, error) {
 		return false, "profile-path", nil
 	}
@@ -185,7 +185,7 @@ func TestRestartComin(t *testing.T) {
 	r := utils.NewRepositoryMock()
 	f := fetcher.NewFetcher(r)
 	f.Start()
-	b := builder.New("repoPath", "", "my-machine", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
+	b := builder.New("repoPath", "", "my-machine", "config.system.build.toplevel", 2*time.Second, mkNixEvalMock(evalOk), 2*time.Second, mkNixBuildMock(buildOk))
 	var deployFunc = func(context.Context, string, string) (bool, string, error) {
 		return true, "profile-path", nil
 	}
@@ -212,10 +212,10 @@ func TestIncorrectMachineId(t *testing.T) {
 	r := utils.NewRepositoryMock()
 	f := fetcher.NewFetcher(r)
 	f.Start()
-	nixEval := func(ctx context.Context, repositoryPath string, hostname string) (string, string, string, error) {
+	nixEval := func(ctx context.Context, repositoryPath string, hostname string, output string) (string, string, string, error) {
 		return "drv-path", "out-path", "invalid-machine-id", nil
 	}
-	b := builder.New("repoPath", "", "my-machine", 2*time.Second, nixEval, 2*time.Second, mkNixBuildMock(buildOk))
+	b := builder.New("repoPath", "", "my-machine", "config.system.build.toplevel", 2*time.Second, nixEval, 2*time.Second, mkNixBuildMock(buildOk))
 	d := mkDeployerMock()
 	m := New(store.New("", 1, 1), prometheus.New(), scheduler.New(), f, b, d, "the-test-machine-id")
 	go m.Run()
@@ -236,10 +236,10 @@ func TestCorrectMachineId(t *testing.T) {
 	r := utils.NewRepositoryMock()
 	f := fetcher.NewFetcher(r)
 	f.Start()
-	nixEval := func(ctx context.Context, repositoryPath string, hostname string) (string, string, string, error) {
+	nixEval := func(ctx context.Context, repositoryPath string, hostname string, output string) (string, string, string, error) {
 		return "drv-path", "out-path", "the-test-machine-id", nil
 	}
-	b := builder.New("repoPath", "", "my-machine", 2*time.Second, nixEval, 2*time.Second, mkNixBuildMock(buildOk))
+	b := builder.New("repoPath", "", "my-machine", "config.system.build.toplevel", 2*time.Second, nixEval, 2*time.Second, mkNixBuildMock(buildOk))
 	d := mkDeployerMock()
 	m := New(store.New("", 1, 1), prometheus.New(), scheduler.New(), f, b, d, "the-test-machine-id")
 	go m.Run()

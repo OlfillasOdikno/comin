@@ -14,7 +14,7 @@ import (
 )
 
 var mkNixEvalMock = func(evalDone chan struct{}) EvalFunc {
-	return func(ctx context.Context, repositoryPath string, hostname string) (string, string, string, error) {
+	return func(ctx context.Context, repositoryPath string, hostname string, output string) (string, string, string, error) {
 		select {
 		case <-ctx.Done():
 			return "", "", "", ctx.Err()
@@ -44,7 +44,7 @@ func TestBuilderBuild(t *testing.T) {
 	evalDone := make(chan struct{})
 	buildDone := make(chan struct{})
 
-	b := New("", "", "my-machine", 2*time.Second, mkNixEvalMock(evalDone), 2*time.Second, mkNixBuildMock(buildDone))
+	b := New("", "", "my-machine", "config.system.build.toplevel", 2*time.Second, mkNixEvalMock(evalDone), 2*time.Second, mkNixBuildMock(buildDone))
 
 	assert.ErrorContains(t, b.Build(), "The generation is not evaluated")
 	// Run the evaluator
@@ -94,7 +94,7 @@ func TestBuilderBuild(t *testing.T) {
 
 func TestEval(t *testing.T) {
 	evalDone := make(chan struct{})
-	b := New("", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
+	b := New("", "", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
 	b.Eval(repository.RepositoryStatus{})
 	assert.True(t, b.IsEvaluating)
 
@@ -110,7 +110,7 @@ func TestEval(t *testing.T) {
 
 func TestBuilderPreemption(t *testing.T) {
 	evalDone := make(chan struct{})
-	b := New("", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
+	b := New("", "", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
 	b.Eval(repository.RepositoryStatus{SelectedCommitId: "commit-1"})
 	assert.True(t, b.IsEvaluating)
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
@@ -129,7 +129,7 @@ func TestBuilderPreemption(t *testing.T) {
 
 func TestBuilderStop(t *testing.T) {
 	evalDone := make(chan struct{})
-	b := New("", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
+	b := New("", "", "", "", 5*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
 	b.Eval(repository.RepositoryStatus{})
 	assert.True(t, b.IsEvaluating)
 	b.Stop()
@@ -141,7 +141,7 @@ func TestBuilderStop(t *testing.T) {
 
 func TestBuilderTimeout(t *testing.T) {
 	evalDone := make(chan struct{})
-	b := New("", "", "", 1*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
+	b := New("", "", "", "", 1*time.Second, mkNixEvalMock(evalDone), 5*time.Second, nixBuildMockNil)
 	b.Eval(repository.RepositoryStatus{})
 	assert.True(t, b.IsEvaluating)
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {

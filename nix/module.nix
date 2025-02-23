@@ -4,6 +4,7 @@ let
   yaml = pkgs.formats.yaml { };
   cominConfig = {
     hostname = cfg.services.comin.hostname;
+    output = cfg.services.comin.output;
     state_dir = "/var/lib/comin";
     flake_subdirectory = cfg.services.comin.flakeSubdirectory;
     remotes = cfg.services.comin.remotes;
